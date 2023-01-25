@@ -1,13 +1,12 @@
 from sqlalchemy.orm import mapper, relationship, sessionmaker
-from sqlalchemy import Table, Column, Integer, String, ForeignKey
+from sqlalchemy import Table, Column, Integer, Float, String, DateTime
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import mapper, relationship
 
-from repository.abstract import *
 from domain.entities import *
 
 #
-class SqlAlchemyRepository(AbstractRepository):
+class SqlAlchemyRepository():
     
     #
     def __init__(self):
@@ -33,7 +32,18 @@ class SqlAlchemyRepository(AbstractRepository):
 
         session.commit()
         session.close()
+
+    #    
+    def create_registers(self, entity_registers):
         
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+        
+        session.add(entity_registers)
+
+        session.commit()
+        session.close()        
+
     #
     def read_register(self, entity, id_register):
         
@@ -79,34 +89,26 @@ class SQLAlchemyMapper():
     #
     def run(self, metadata):
         mapper(
-            User,
-            self._get_user_map(metadata),
-            properties={
-                'things': relationship(Thing, backref='tb_user')
-            },
+            Sample,
+            self._get_sample_map(metadata)
         )
-        mapper(
-            Thing,
-            self._get_thing_map(metadata)
-        )
-            
-    #
-    def _get_user_map(self, metadata):
-        user_map = Table(
-            'tb_user',
-            metadata,
-            Column('id_user', Integer, primary_key=True, autoincrement=True),
-            Column('name', String(50)),
-        )
-        return user_map
 
     #
-    def _get_thing_map(self, metadata):
-        thing_map = Table(
-            'tb_thing',
+    def _get_sample_map(self, metadata):
+        sample_map = Table(
+            'sample_tb',
             metadata,
-            Column('id_thing', Integer, primary_key=True, autoincrement=True),
-            Column("fk_id_user", Integer, ForeignKey("tb_user.id_user")),
-            Column('desc', String(50)),
+            Column('sensorar_sample_id', Integer, primary_key=True, autoincrement=True),
+            Column('ttn_gateway_id', String, nullable=True),
+            Column('ttn_gateway_lat', Float(20), nullable=False),
+            Column('ttn_gateway_lng', Float(20), nullable=False),
+            Column('ttn_device_id', String, nullable=False),
+            Column('ttn_received_at', DateTime, nullable=False),
+            Column('ttn_payload_frm', String, nullable=False),
+            Column('ttn_payload_temp', Float, nullable=False),
+            Column('ttn_payload_rh', Float, nullable=False),
+            Column('ttn_payload_pm1_0', Float, nullable=False),
+            Column('ttn_payload_pm2_5', Float, nullable=False),
+            Column('ttn_payload_pm10_0', Float, nullable=False),
         )
-        return thing_map
+        return sample_map
