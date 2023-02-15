@@ -844,10 +844,11 @@ void processWork(ostime_t doWorkJobTimeStamp)
             }
             //pms.sleep();
 
-            // Prepare uplink payload.
+            // Prepare uplink payload
             uint8_t fPort = 10;
             uint8_t payloadLength = 14;
 
+            // Schedule uplink message
             scheduleUplink(fPort, payloadBuffer, payloadLength);
 
         }
