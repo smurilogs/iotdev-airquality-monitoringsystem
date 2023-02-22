@@ -95,18 +95,16 @@ def get_iqar_df(select_df):
             select_df.loc[i, 'iqar_pm2_5_color'] = iqar_color
             select_df.loc[i, 'iqar_pm2_5_value'] = iqar_value
 
-        #
-        select_dicts = select_df.to_dict('records')
-        return select_dicts
+        return select_df
 
     else:
-        select_dicts = []
-        return select_dicts
+        select_df = pd.DataFrame()
+        return select_df
 
 
 
 
-def show_pm2_5_plot(select_dicts):
+def show_pm2_5_plot(iqar_dicts):
     
     st.vega_lite_chart({
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -116,7 +114,7 @@ def show_pm2_5_plot(select_dicts):
         "width": 900,
         "height": 210,
         "data": {
-            "values": select_dicts
+            "values": iqar_dicts
         },
         "mark": {"type": "bar", "line": False, "point": True},
         "encoding": {
@@ -164,7 +162,7 @@ def show_pm2_5_plot(select_dicts):
         ],  
     })
 
-def show_pm10_0_plot(select_dicts):
+def show_pm10_0_plot(iqar_dicts):
     
     st.vega_lite_chart({
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -174,7 +172,7 @@ def show_pm10_0_plot(select_dicts):
         "width": 900,
         "height": 210,
         "data": {
-            "values": select_dicts
+            "values": iqar_dicts
         },
         "mark": {"type": "bar", "line": False, "point": True},
         "encoding": {
@@ -222,7 +220,7 @@ def show_pm10_0_plot(select_dicts):
         ],
     })
 
-def show_temp_rh_plots(select_dicts):
+def show_temp_rh_plots(iqar_dicts):
     
     st.vega_lite_chart({
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -232,7 +230,7 @@ def show_temp_rh_plots(select_dicts):
         "width": 900,
         "height": 250,
         "data": {
-            "values": select_dicts
+            "values": iqar_dicts
         },
         "mark": {"type": "line", "line": False, "point": True},
         "encoding": {
@@ -284,7 +282,7 @@ def show_temp_rh_plots(select_dicts):
         "width": 900,
         "height": 250,
         "data": {
-            "values": select_dicts
+            "values": iqar_dicts
         },
         "mark": {"type": "line", "line": False, "point": True},
         "encoding": {
@@ -339,7 +337,7 @@ def get_select_df(start_date, stop_date):
 
 def show_device_selector():
     return st.selectbox(
-        'Dispositivo',
+        'Dispositivo:',
         (
             'sensorar-enddevice-1',
             ''
@@ -428,27 +426,26 @@ if(len(dates_range) == 2):
     stop_date = dates_range[1]
     select_df = get_select_df(start_date, stop_date)
 
-select_dicts = get_iqar_df(select_df)
+iqar_df = get_iqar_df(select_df)
+iqar_dicts = iqar_df.to_dict('records')
 
 if('MP2,5' in presenting):
-    show_pm2_5_plot(select_dicts)
+    show_pm2_5_plot(iqar_dicts)
 
 if('MP10' in presenting):
-    show_pm10_0_plot(select_dicts)
+    show_pm10_0_plot(iqar_dicts)
 
 if('Ambiente' in presenting):
-    show_temp_rh_plots(select_dicts)
+    show_temp_rh_plots(iqar_dicts)
 
-
-
-hide_table_row_index = """
-            <style>
-            thead tr th:first-child {display:none}
-            tbody th {display:none}
-            </style>
-            """
-st.markdown(hide_table_row_index, unsafe_allow_html=True)
-st.table(select_df[['received_at', 'temp', 'rh', 'pm2_5', 'pm10_0']])
+#hide_table_row_index = """
+#            <style>
+#            thead tr th:first-child {display:none}
+#            tbody th {display:none}
+#            </style>
+#            """
+#st.markdown(hide_table_row_index, unsafe_allow_html=True)
+#st.table(iqar_dicts[['received_at', 'temp', 'rh', 'pm2_5', 'pm10_0']])
 
 
 
