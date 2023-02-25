@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from entities import *
 from repository import *
 
-
 load_dotenv()
 
 CC_SOURCE = os.environ.get('TTN_APP_NAME')
