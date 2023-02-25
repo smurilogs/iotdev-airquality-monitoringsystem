@@ -1,6 +1,6 @@
 
 from typing import List
-import datetime
+from datetime import datetime
 
 class Sample(object):
     

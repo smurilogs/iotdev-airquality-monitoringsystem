@@ -1,3 +1,4 @@
+import os
 import json
 import pandas as pd
 import requests
@@ -6,10 +7,9 @@ import pytz
 import sqlite3
 from dotenv import load_dotenv
 
-from domain.entities import *
-from repository.sqlalchemy import *
-from utility.changecapture import *
-from utility.filehandler import *
+from entities import *
+from repository import *
+
 
 load_dotenv()
 
@@ -74,7 +74,7 @@ def get_last_timestamp_str():
     if(select_df.loc[0, 'ttn_received_at'] is not None):  
         last_timestamp_str = str(select_df.loc[0, 'ttn_received_at'])    
         return last_timestamp_str
-    return '2000-01-1 00:00:00.000000'
+    return '2000-01-01 00:00:00.000000000'
 
 repo = SqlAlchemyRepository()
 repo.init()

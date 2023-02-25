@@ -64,7 +64,7 @@
 #include <DHT_U.h>
 #include <PMS.h>
 
-// definição
+// definição de modelo do sensor e de pino utilizado para dados
 #define DHTPIN 4
 #define DHTTYPE DHT22
 
@@ -76,7 +76,7 @@ sensor_t sensor;
 PMS pms(Serial2);
 PMS::DATA data;
 
-// Adjust to fit max payload length
+// definição do tamanho máximo do buffer para payload
 const uint8_t payloadBufferLength = 14;
 
 
@@ -709,174 +709,106 @@ lmic_tx_error_t scheduleUplink(uint8_t fPort, uint8_t* data, uint8_t dataLength,
 //  █ █ ▀▀█ █▀▀ █▀▄   █   █ █ █ █ █▀▀   █▀▄ █▀▀ █ █  █  █ █
 //  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀   ▀▀▀ ▀▀▀ ▀▀  ▀▀▀   ▀▀  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀
 
-
-static volatile uint16_t counter_ = 0;
-
-uint16_t getCounterValue()
-{
-    // Increments counter and returns the new value.
-    delay(50);         // Fake this takes some time
-    return ++counter_;
-}
-
-void resetCounter()
-{
-    // Reset counter to 0
-    counter_ = 0;
-}
-
-
 void processWork(ostime_t doWorkJobTimeStamp)
 {
-    // This function is called from the doWorkCallback() 
-    // callback function when the doWork job is executed.
-
-    // Uses globals: payloadBuffer and LMIC data structure.
-
-    // This is where the main work is performed like
-    // reading sensor and GPS data and schedule uplink
-    // messages if anything needs to be transmitted.
-
-    // Skip processWork if using OTAA and still joining.
+    // se DEVADDR é um valor já definido 
     if (LMIC.devaddr != 0)
     {
-        // Collect input data.
-        // For simplicity LMIC-node uses a counter to simulate a sensor. 
-        // The counter is increased automatically by getCounterValue()
-        // and can be reset with a 'reset counter' command downlink message.
+        // quando não for possível o agendamento de uma mensagem de uplink ...
+        if(LMIC.opmode & OP_TXRXPEND);
 
-        uint16_t counterValue = getCounterValue();
-        ostime_t timestamp = os_getTime();
-
-        #ifdef USE_DISPLAY
-            // Interval and Counter values are combined on a single row.
-            // This allows to keep the 3rd row empty which makes the
-            // information better readable on the small display.
-            display.clearLine(INTERVAL_ROW);
-            display.setCursor(COL_0, INTERVAL_ROW);
-            display.print("I:");
-            display.print(doWorkIntervalSeconds);
-            display.print("s");        
-            display.print(" Ctr:");
-            display.print(counterValue);
-        #endif
-        #ifdef USE_SERIAL
-            printEvent(timestamp, "Input data collected", PrintTarget::Serial);
-            printSpaces(serial, MESSAGE_INDENT);
-            serial.print(F("COUNTER value: "));
-            serial.println(counterValue);
-        #endif    
-
-        // For simplicity LMIC-node will try to send an uplink
-        // message every time processWork() is executed.
-
-        // Schedule uplink message if possible
-        if (LMIC.opmode & OP_TXRXPEND)
-        {
-            // TxRx is currently pending, do not send.
-            #ifdef USE_SERIAL
-                printEvent(timestamp, "Uplink not scheduled because TxRx pending", PrintTarget::Serial);
-            #endif    
-            #ifdef USE_DISPLAY
-                printEvent(timestamp, "UL not scheduled", PrintTarget::Display);
-            #endif
-        }
+        // quando for possível o agendamento de uma mensagem de uplink ...
         else
         {
-
            	// declara objeto evento para a captura das leituras
             sensors_event_t event;
 
-            // captura leituras de temperatura no objeto evento
+	        // tenta capturar leituras de temperatura no objeto evento
             dht.temperature().getEvent(&event);
             delay(500);                
 
+            // se a captura de temperatura ocorrer ...
             if(!isnan(event.temperature))
             {
+                // declara variáveis auxiliares para a parte inteira e decimal do 
+                // valor de temperatura capturado
                 uint16_t interTemp = (int) event.temperature;
-                uint16_t decimTemp = (event.temperature - (int) event.temperature)*100.0;
+                uint16_t decimTemp = (event.temperature
+                    - (int) event.temperature)*100.0;
 
+                // aloca a parte inteira e decimal do valor capturado no buffer
+                // para payload
                 payloadBuffer[0] = interTemp >> 8;
                 payloadBuffer[1] = interTemp & 0xFF;
                 payloadBuffer[2] = decimTemp >> 8;
                 payloadBuffer[3] = decimTemp & 0xFF;
             }
 
-            // captura leituras de umidade relativa no objeto evento
+	        // tenta capturar leituras de umidade relativa no objeto evento
             dht.humidity().getEvent(&event);
             delay(500);                
 
+            // se a captura de umidade estiver pronta ...
             if(!isnan(event.relative_humidity))
             {
+                // declara variáveis auxiliares para a parte inteira e decimal 
+                // do valor de umidade capturado
                 uint16_t interHumid = (int) event.relative_humidity;
-                uint16_t decimHumid = (event.relative_humidity - (int) event.relative_humidity)*100.0;                
+                uint16_t decimHumid = (event.relative_humidity
+                    - (int) event.relative_humidity)*100.0;                
 
+                // aloca a parte inteira e decimal do valor capturado no buffer
+                // para payload
                 payloadBuffer[4] = interHumid >> 8;
                 payloadBuffer[5] = interHumid & 0xFF;
                 payloadBuffer[6] = decimHumid >> 8;
                 payloadBuffer[7] = decimHumid & 0xFF;
             }
 
-
-
             delay(500);
             pms.requestRead();
             delay(500);
             
+            // se a captura de presença de MP estiver pronta ...
             if (pms.readUntil(data))
             {
+                // utiliza captura de leitura de MP1,0 no incremento da
+                // montagem do payload
                 uint16_t pmVal = (uint16_t) data.PM_AE_UG_1_0;             
                 payloadBuffer[8] = pmVal >> 8;
                 payloadBuffer[9] = pmVal & 0xFF;
 
+                // utiliza captura de leitura de MP2,5 no incremento da
+                //  montagem do payload
                 pmVal = (uint16_t) data.PM_AE_UG_2_5;             
                 payloadBuffer[10] = pmVal >> 8;
                 payloadBuffer[11] = pmVal & 0xFF;
 
+                // utiliza captura de leitura de MP10 no incremento da
+                //  montagem do payload
                 pmVal = (uint16_t) data.PM_AE_UG_10_0;           
                 payloadBuffer[12] = pmVal >> 8;
                 payloadBuffer[13] = pmVal & 0xFF;
             }
-            else
-            {
 
-                delay(500);  // try again in a bit!
-            }
-            //pms.sleep();
-
-            // Prepare uplink payload
+            // prepara o payload com mensagem de uplink
             uint8_t fPort = 10;
             uint8_t payloadLength = 14;
 
-            // Schedule uplink message
+            // agenda transmissão do payload montado
             scheduleUplink(fPort, payloadBuffer, payloadLength);
-
         }
     }
 }    
  
-
 void processDownlink(ostime_t txCompleteTimestamp, uint8_t fPort, uint8_t* data, uint8_t dataLength)
 {
-    // This function is called from the onEvent() event handler
-    // on EV_TXCOMPLETE when a downlink message was received.
-
-    // Implements a 'reset counter' command that can be sent via a downlink message.
-    // To send the reset counter command to the node, send a downlink message
-    // (e.g. from the TTN Console) with single byte value resetCmd on port cmdPort.
-
     const uint8_t cmdPort = 100;
     const uint8_t resetCmd= 0xC0;
 
     if (fPort == cmdPort && dataLength == 1 && data[0] == resetCmd)
     {
-        #ifdef USE_SERIAL
-            printSpaces(serial, MESSAGE_INDENT);
-            serial.println(F("Reset cmd received"));
-        #endif
-        ostime_t timestamp = os_getTime();
-        resetCounter();
-        printEvent(timestamp, "Counter reset", PrintTarget::All, false);
+
     }          
 }
 
@@ -925,24 +857,20 @@ void setup()
 //  █ █ ▀▀█ █▀▀ █▀▄   █   █ █ █ █ █▀▀   █▀▄ █▀▀ █ █  █  █ █
 //  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀   ▀▀▀ ▀▀▀ ▀▀  ▀▀▀   ▀▀  ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀
 
-    // Place code for initializing sensors etc. here.
-
-
+    // espera por 5 segundos a inicialização eletrônica dos sensores
     delay(5000);
 
-    //
+    // utiliza o objeto sensor para configurar e inicializar o funcionamento do DHT22 
 	dht.temperature().getSensor(&sensor);
 	dht.humidity().getSensor(&sensor);
 	dht.begin();
     
-    //
+    // inicializa interface UART2 do ESP32, utilizando os pinos 32 (TX) e 33 (RX)
     Serial2.begin(9600, SERIAL_8N1, 33, 32);
 
-    //
-    pms.passiveMode();    // Switch to passive mode
+    // configura o PMS5003 no modo passivo inicia sua operação no modo awake 
+    pms.passiveMode();
     pms.wakeUp();
-
-    resetCounter();
 
 //  █ █ █▀▀ █▀▀ █▀▄   █▀▀ █▀█ █▀▄ █▀▀   █▀▀ █▀█ █▀▄
 //  █ █ ▀▀█ █▀▀ █▀▄   █   █ █ █ █ █▀▀   █▀▀ █ █ █ █

@@ -1,9 +1,10 @@
+from sqlalchemy.orm import registry
 from sqlalchemy.orm import mapper, relationship, sessionmaker
 from sqlalchemy import Table, Column, Integer, Float, String, DateTime
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.orm import mapper, relationship
 
-from domain.entities import *
+
+from entities import *
 
 #
 class SqlAlchemyRepository():
@@ -17,7 +18,7 @@ class SqlAlchemyRepository():
     #    
     def init(self):
         
-        mapper = SQLAlchemyMapper()
+        mapper = SQLAlchemyMapper(self.metadata)
         mapper.run(self.metadata)
         
         self.metadata.create_all(bind=self.engine)
@@ -83,12 +84,12 @@ class SqlAlchemyRepository():
 class SQLAlchemyMapper():
 
     #
-    def __init__(self):
-        pass
+    def __init__(self, metadata):
+        self.mapper_registry = registry(metadata=metadata)
 
     #
     def run(self, metadata):
-        mapper(
+        self.mapper_registry.map_imperatively(
             Sample,
             self._get_sample_map(metadata)
         )
