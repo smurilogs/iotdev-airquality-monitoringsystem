@@ -329,7 +329,7 @@ def show_temp_rh_plots(iqar_dicts):
 def get_select_df(start_date, stop_date):
     date_start_str = start_date.strftime("%Y-%m-%d")#datetime(2023, 1, 23).strftime("%Y-%m-%d")
     date_stop_str = stop_date.strftime("%Y-%m-%d")#datetime(2023, 1, 30).strftime("%Y-%m-%d")
-    con = sqlite3.connect('./data/db.sqlite3')
+    con = sqlite3.connect('././data/db.sqlite3')
     select_df = pd.read_sql_query('SELECT * from sample_tb WHERE \''+ date_start_str + ' 00:00\' < ttn_received_at AND ttn_received_at < \'' + date_stop_str + ' 23:59\'', con)
     con.close()    
     return select_df

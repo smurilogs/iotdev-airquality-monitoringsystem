@@ -67,7 +67,7 @@ def _assembly_uplink_dicts(response_uplink_dicts):
     return uplink_dicts
 
 def get_last_timestamp_str():
-    con = sqlite3.connect('./data/db.sqlite3')
+    con = sqlite3.connect('././data/db.sqlite3')
     select_df = pd.read_sql_query('SELECT MAX(ttn_received_at) as ttn_received_at FROM sample_tb', con)
     con.close()
     if(select_df.loc[0, 'ttn_received_at'] is not None):  
@@ -89,27 +89,28 @@ uplink_df = uplink_df.astype(str)
 last_timestamp_str = get_last_timestamp_str()
 print(last_timestamp_str)
 
-inserts_df = uplink_df[uplink_df['ttn_received_at'] > last_timestamp_str].reset_index(drop=True)
-inserts_df = inserts_df.astype(str)
+if(len(uplink_df) > 0):
 
+    inserts_df = uplink_df[uplink_df['ttn_received_at'] > last_timestamp_str].reset_index(drop=True)
+    inserts_df = inserts_df.astype(str)
 
-samples = []
-for i in range(len(inserts_df)):
-    sample = Sample(
-        sensorar_sample_id = None,
-        ttn_gateway_id = inserts_df.loc[i, 'ttn_gateway_id'],
-        ttn_gateway_lat = float(inserts_df.loc[i, 'ttn_gateway_lat']),
-        ttn_gateway_lng = float(inserts_df.loc[i, 'ttn_gateway_lng']),
-        ttn_device_id = inserts_df.loc[i, 'ttn_device_id'],
-        ttn_received_at = datetime.strptime(str(inserts_df.loc[i, 'ttn_received_at']), '%Y-%m-%d %H:%M:%S'),
-        ttn_payload_frm = inserts_df.loc[i, 'ttn_payload_frm'],
-        ttn_payload_temp = float(inserts_df.loc[i, 'ttn_payload_temp']),
-        ttn_payload_rh = float(inserts_df.loc[i, 'ttn_payload_rh']),
-        ttn_payload_pm1_0 = float(inserts_df.loc[i, 'ttn_payload_pm1_0']),
-        ttn_payload_pm2_5 = float(inserts_df.loc[i, 'ttn_payload_pm2_5']),
-        ttn_payload_pm10_0 = float(inserts_df.loc[i, 'ttn_payload_pm10_0'])
-    )
-    samples.append(sample)
+    samples = []
+    for i in range(len(inserts_df)):
+        sample = Sample(
+            sensorar_sample_id = None,
+            ttn_gateway_id = inserts_df.loc[i, 'ttn_gateway_id'],
+            ttn_gateway_lat = float(inserts_df.loc[i, 'ttn_gateway_lat']),
+            ttn_gateway_lng = float(inserts_df.loc[i, 'ttn_gateway_lng']),
+            ttn_device_id = inserts_df.loc[i, 'ttn_device_id'],
+            ttn_received_at = datetime.strptime(str(inserts_df.loc[i, 'ttn_received_at']), '%Y-%m-%d %H:%M:%S'),
+            ttn_payload_frm = inserts_df.loc[i, 'ttn_payload_frm'],
+            ttn_payload_temp = float(inserts_df.loc[i, 'ttn_payload_temp']),
+            ttn_payload_rh = float(inserts_df.loc[i, 'ttn_payload_rh']),
+            ttn_payload_pm1_0 = float(inserts_df.loc[i, 'ttn_payload_pm1_0']),
+            ttn_payload_pm2_5 = float(inserts_df.loc[i, 'ttn_payload_pm2_5']),
+            ttn_payload_pm10_0 = float(inserts_df.loc[i, 'ttn_payload_pm10_0'])
+        )
+        samples.append(sample)
 
-for sample in samples:
-    repo.create_register(sample)
+    for sample in samples:
+        repo.create_register(sample)
