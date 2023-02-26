@@ -26,24 +26,24 @@ void setup()
 	// inicializa o funcionamento da porta serial
 	Serial.begin(9600);
 
-    // utiliza o objeto sensor para configurar e inicializar o funcionamento do DHT22 
+	// utiliza o objeto sensor para configurar e inicializar o funcionamento do DHT22 
 	dht.temperature().getSensor(&sensor);
 	dht.humidity().getSensor(&sensor);
 	dht.begin();
-    
-    // inicializa interface UART2 do ESP32, utilizando os pinos 32 (TX) e 33 (RX)
-    Serial2.begin(9600, SERIAL_8N1, 33, 32);
 
-    // configura o PMS5003 no modo passivo inicia sua operação no modo awake 
-    pms.passiveMode();
-    pms.wakeUp();
+	// inicializa interface UART2 do ESP32, utilizando os pinos 32 (TX) e 33 (RX)
+	Serial2.begin(9600, SERIAL_8N1, 33, 32);
+
+	// configura o PMS5003 no modo passivo inicia sua operação no modo awake 
+	pms.passiveMode();
+	pms.wakeUp();
 }
 
 void loop()
 {
 	// declara objeto evento para a captura das leituras
 	sensors_event_t event;
-	
+
 	// declara variáveis utilizadas para armazenamento temporário e flags
 	float temp, rh;
 	uint16_t pm10_0, pm2_5, pm1_0;
@@ -99,14 +99,7 @@ void loop()
 	} else
 		Serial.println(F("Erro na leitura do sensor!"));
 
-	if(!hasReadTemp)
-		Serial.println(F("temp!"));
-	if(!hasReadRH)
-		Serial.println(F("rh!"));
-	if(!hasReadPM)
-		Serial.println(F("pm!"));
-
-	// põe o PMS5003 no modo sleep por 30 segundos
+	// coloca o PMS5003 no modo sleep por 30 segundos
 	pms.sleep();
 	delay(15000);
 }
