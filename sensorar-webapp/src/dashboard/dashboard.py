@@ -339,7 +339,7 @@ def show_device_selector():
     return st.selectbox(
         'Dispositivo:',
         (
-            'sensorar-enddevice-1',
+            'eui-70b3d57ed0059066',
             ''
         )
     )
