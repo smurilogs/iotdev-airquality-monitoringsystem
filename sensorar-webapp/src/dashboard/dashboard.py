@@ -211,7 +211,7 @@ def show_pm2_5_plot(iqar_dicts):
     "description": "A simple bar chart with embedded data.",
 
         "title": "IQAr para MP2,5 (valor adimensional):",
-        "width": 900,
+        "width": 1400,
         "height": 210,
         "data": {
             "values": iqar_dicts
@@ -269,7 +269,7 @@ def show_pm10_0_plot(iqar_dicts):
     "description": "A simple bar chart with embedded data.",
 
         "title": "IQAr para MP10 (valor adimensional):",
-        "width": 900,
+        "width": 1400,
         "height": 210,
         "data": {
             "values": iqar_dicts
@@ -327,7 +327,7 @@ def show_temp_rh_plots(iqar_dicts):
     "description": "A simple bar chart with embedded data.",
 
         "title": "Temperatura Ambiente (°C)",
-        "width": 900,
+        "width": 1400,
         "height": 250,
         "data": {
             "values": iqar_dicts
@@ -379,7 +379,7 @@ def show_temp_rh_plots(iqar_dicts):
     "description": "A simple bar chart with embedded data.",
 
         "title": "Humidade Relativa Ambiente (%)",
-        "width": 900,
+        "width": 1400,
         "height": 250,
         "data": {
             "values": iqar_dicts
