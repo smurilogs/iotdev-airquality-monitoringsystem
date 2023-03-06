@@ -5,6 +5,8 @@ import requests
 from datetime import datetime
 import pytz
 import sqlite3
+import schedule
+import time
 from dotenv import load_dotenv
 
 from entities import *
@@ -75,42 +77,53 @@ def get_last_timestamp_str():
         return last_timestamp_str
     return '2000-01-01 00:00:00.000000000'
 
-repo = SqlAlchemyRepository()
-repo.init()
+def main():
+    
+    repo = SqlAlchemyRepository()
+    repo.init()
 
+    uplink_messages_response = _request_uplink_messages_response()
+    response_uplink_dicts = _assemply_response_uplink_dicts(uplink_messages_response)
+    uplink_dicts = _assembly_uplink_dicts(response_uplink_dicts)
 
-uplink_messages_response = _request_uplink_messages_response()
-response_uplink_dicts = _assemply_response_uplink_dicts(uplink_messages_response)
-uplink_dicts = _assembly_uplink_dicts(response_uplink_dicts)
+    uplink_df = pd.DataFrame.from_dict(uplink_dicts)
+    uplink_df = uplink_df.astype(str)  
 
-uplink_df = pd.DataFrame.from_dict(uplink_dicts)
-uplink_df = uplink_df.astype(str)  
+    last_timestamp_str = get_last_timestamp_str()
+    print(last_timestamp_str)
 
-last_timestamp_str = get_last_timestamp_str()
-print(last_timestamp_str)
+    if(len(uplink_df) > 0):
 
-if(len(uplink_df) > 0):
+        inserts_df = uplink_df[uplink_df['ttn_received_at'] > last_timestamp_str].reset_index(drop=True)
+        inserts_df = inserts_df.astype(str)
 
-    inserts_df = uplink_df[uplink_df['ttn_received_at'] > last_timestamp_str].reset_index(drop=True)
-    inserts_df = inserts_df.astype(str)
+        samples = []
+        for i in range(len(inserts_df)):
+            sample = Sample(
+                sensorar_sample_id = None,
+                ttn_gateway_id = inserts_df.loc[i, 'ttn_gateway_id'],
+                ttn_gateway_lat = float(inserts_df.loc[i, 'ttn_gateway_lat']),
+                ttn_gateway_lng = float(inserts_df.loc[i, 'ttn_gateway_lng']),
+                ttn_device_id = inserts_df.loc[i, 'ttn_device_id'],
+                ttn_received_at = datetime.strptime(str(inserts_df.loc[i, 'ttn_received_at']), '%Y-%m-%d %H:%M:%S'),
+                ttn_payload_frm = inserts_df.loc[i, 'ttn_payload_frm'],
+                ttn_payload_temp = float(inserts_df.loc[i, 'ttn_payload_temp']),
+                ttn_payload_rh = float(inserts_df.loc[i, 'ttn_payload_rh']),
+                ttn_payload_pm1_0 = float(inserts_df.loc[i, 'ttn_payload_pm1_0']),
+                ttn_payload_pm2_5 = float(inserts_df.loc[i, 'ttn_payload_pm2_5']),
+                ttn_payload_pm10_0 = float(inserts_df.loc[i, 'ttn_payload_pm10_0'])
+            )
+            samples.append(sample)
 
-    samples = []
-    for i in range(len(inserts_df)):
-        sample = Sample(
-            sensorar_sample_id = None,
-            ttn_gateway_id = inserts_df.loc[i, 'ttn_gateway_id'],
-            ttn_gateway_lat = float(inserts_df.loc[i, 'ttn_gateway_lat']),
-            ttn_gateway_lng = float(inserts_df.loc[i, 'ttn_gateway_lng']),
-            ttn_device_id = inserts_df.loc[i, 'ttn_device_id'],
-            ttn_received_at = datetime.strptime(str(inserts_df.loc[i, 'ttn_received_at']), '%Y-%m-%d %H:%M:%S'),
-            ttn_payload_frm = inserts_df.loc[i, 'ttn_payload_frm'],
-            ttn_payload_temp = float(inserts_df.loc[i, 'ttn_payload_temp']),
-            ttn_payload_rh = float(inserts_df.loc[i, 'ttn_payload_rh']),
-            ttn_payload_pm1_0 = float(inserts_df.loc[i, 'ttn_payload_pm1_0']),
-            ttn_payload_pm2_5 = float(inserts_df.loc[i, 'ttn_payload_pm2_5']),
-            ttn_payload_pm10_0 = float(inserts_df.loc[i, 'ttn_payload_pm10_0'])
-        )
-        samples.append(sample)
+        for sample in samples:
+            repo.create_register(sample)
 
-    for sample in samples:
-        repo.create_register(sample)
+if __name__ == '__main__':
+    
+    schedule.every().day.at('00:00').do(main)
+    schedule.every().day.at('12:00').do(main)
+    schedule.every().minute.at(':00').do(main)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
