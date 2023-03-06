@@ -9,6 +9,101 @@ from datetime import datetime, timedelta
 
 def get_iqar_df(select_df):
 
+    test_select_df = pd.DataFrame.from_records(
+        [
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-01',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 7,
+                'ttn_payload_pm10_0': 25.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-02',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 35.5,
+                'ttn_payload_pm10_0': 75.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-03',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 65.5,
+                'ttn_payload_pm10_0': 125.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-04',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 90.5,
+                'ttn_payload_pm10_0': 175.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-05',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-06',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-07',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-08',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-09',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            },
+            {
+                'ttn_device_id': 'eui-70b3d57ed0059066',
+                'ttn_received_at': '2023-01-10',
+                'ttn_payload_temp': 29.87,
+                'ttn_payload_rh': 56.84,
+                'ttn_payload_pm1_0': 0.4,
+                'ttn_payload_pm2_5': 130.5,
+                'ttn_payload_pm10_0': 275.5
+            }
+        ]
+    )
+
     if(len(select_df) != 0):
         #
         select_df = select_df[['ttn_device_id', 'ttn_received_at', 'ttn_payload_temp', 'ttn_payload_rh', 'ttn_payload_pm1_0', 'ttn_payload_pm2_5', 'ttn_payload_pm10_0']]
@@ -27,7 +122,6 @@ def get_iqar_df(select_df):
             ttn_payload_pm2_5 = ('ttn_payload_pm2_5', 'mean'),
             ttn_payload_pm10_0 = ('ttn_payload_pm10_0', 'mean')
         ).reset_index()
-        select_df= select_df.round(decimals=2)
 
         #
         select_df = select_df.rename(columns={
@@ -40,6 +134,10 @@ def get_iqar_df(select_df):
                 'ttn_payload_pm10_0': 'pm10_0',
         })
 
+        for i in range(len(select_df)):
+            select_df.loc[i, 'temp'] = round(select_df.loc[i, 'temp'], 1)
+            select_df.loc[i, 'rh'] = round(select_df.loc[i, 'rh'], 1)
+
         #
         select_df['iqar_pm10_0_color'] = None
         select_df['iqar_pm10_0_value'] = None
@@ -50,20 +148,21 @@ def get_iqar_df(select_df):
 
             elif(50 < select_df.loc[i, 'pm10_0'] <= 100):
                 iqar_color = 'yellow'
-                iqar_value = 41 + ((80 - 41)/(100 - 51)) * (select_df.loc[i, 'pm10_0'] - 51)
+                iqar_value = 40 + ((80 - 40)/(100 - 50)) * (select_df.loc[i, 'pm10_0'] - 50)
                 
             elif(100 < select_df.loc[i, 'pm10_0'] <= 150):
                 iqar_color = 'orange'
-                iqar_value = 81 + ((120 - 81)/(150 - 101)) * (select_df.loc[i, 'pm10_0'] - 101)
+                iqar_value = 80 + ((120 - 80)/(150 - 100)) * (select_df.loc[i, 'pm10_0'] - 100)
                     
             elif(150 < select_df.loc[i, 'pm10_0'] <= 250):
                 iqar_color = 'red'
-                iqar_value = 121 + ((200 - 121)/(250 - 151)) * (select_df.loc[i, 'pm10_0'] - 151)
+                iqar_value = 120 + ((200 - 120)/(250 - 150)) * (select_df.loc[i, 'pm10_0'] - 150)
             
             elif(250 < select_df.loc[i, 'pm10_0']):
                 iqar_color = 'purple'
-                iqar_value = 201 + ((400 - 201)/(600 - 251)) * (select_df.loc[i, 'pm10_0'] - 251)
+                iqar_value = 200 + ((400 - 200)/(600 - 250)) * (select_df.loc[i, 'pm10_0'] - 250)
 
+            iqar_value = round(iqar_value, 2)
             select_df.loc[i, 'iqar_pm10_0_color'] = iqar_color
             select_df.loc[i, 'iqar_pm10_0_value'] = iqar_value
 
@@ -72,26 +171,27 @@ def get_iqar_df(select_df):
         select_df['iqar_pm2_5_value'] = None
         for i in range(len(select_df)):
             
-            if(select_df.loc[i, 'pm2_5'] <= 50):
+            if(select_df.loc[i, 'pm2_5'] <= 25):
                 iqar_color = 'green'
                 iqar_value = 0 + ((40 - 0)/(25 - 0)) * (select_df.loc[i, 'pm2_5'] - 0)
                     
-            elif(50 < select_df.loc[i, 'pm2_5'] <= 100):
+            elif(25 < select_df.loc[i, 'pm2_5'] <= 50):
                 iqar_color = 'yellow'
-                iqar_value = 41 + ((80 - 41)/(50 - 26)) * (select_df.loc[i, 'pm2_5'] - 26)
+                iqar_value = 40 + ((80 - 40)/(50 - 25)) * (select_df.loc[i, 'pm2_5'] - 25)
                 
-            elif(100 < select_df.loc[i, 'pm2_5'] <= 150):
+            elif(50 < select_df.loc[i, 'pm2_5'] <= 75):
                 iqar_color = 'orange'
-                iqar_value = 81 + ((120 - 81)/(75 - 51)) * (select_df.loc[i, 'pm2_5'] - 51)
+                iqar_value = 80 + ((120 - 80)/(75 - 50)) * (select_df.loc[i, 'pm2_5'] - 50)
                     
-            elif(150 < select_df.loc[i, 'pm2_5'] <= 250):
+            elif(75 < select_df.loc[i, 'pm2_5'] <= 125):
                 iqar_color = 'red'
-                iqar_value = 121 + ((200 - 121)/(125 - 76)) * (select_df.loc[i, 'pm2_5'] - 76)
+                iqar_value = 120 + ((200 - 120)/(125 - 75)) * (select_df.loc[i, 'pm2_5'] - 75)
             
-            elif(250 < select_df.loc[i, 'pm2_5']):
+            elif(125 < select_df.loc[i, 'pm2_5']):
                 iqar_color = 'purple'
-                iqar_value = 201 + ((400 - 201)/(300 - 126)) * (select_df.loc[i, 'pm2_5'] - 126)
+                iqar_value = 200 + ((400 - 200)/(300 - 125)) * (select_df.loc[i, 'pm2_5'] - 125)
 
+            iqar_value = round(iqar_value, 2)
             select_df.loc[i, 'iqar_pm2_5_color'] = iqar_color
             select_df.loc[i, 'iqar_pm2_5_value'] = iqar_value
 
@@ -428,6 +528,8 @@ if(len(dates_range) == 2):
 
 iqar_df = get_iqar_df(select_df)
 iqar_dicts = iqar_df.to_dict('records')
+#print(iqar_dicts)
+#iqar_dicts = [{'device_id': 'eui-70b3d57ed0059066', 'received_at': '2023-01-01', 'temp': 29.87, 'rh': 56.84, 'pm1_0': 0.4, 'pm2_5': 0.96, 'pm10_0': 1.42, 'iqar_pm10_0_color': 'green', 'iqar_pm10_0_value': 1.136, 'iqar_pm2_5_color': 'green', 'iqar_pm2_5_value': 1.536}]
 
 if('MP2,5' in presenting):
     show_pm2_5_plot(iqar_dicts)
