@@ -28,7 +28,7 @@ def _request_uplink_messages_response():
         'Accept': 'text/event-stream'
     }
     params ={
-        'after': '2023-01-22T00:00:00Z',
+        'after': '2023-03-06T12:45:00Z', # '2023-01-22T00:00:00Z', 
         'field_mask': 'up.uplink_message'
     }
     response = requests.get(
@@ -77,11 +77,8 @@ def get_last_timestamp_str():
         return last_timestamp_str
     return '2000-01-01 00:00:00.000000000'
 
-def main():
+def job():
     
-    repo = SqlAlchemyRepository()
-    repo.init()
-
     uplink_messages_response = _request_uplink_messages_response()
     response_uplink_dicts = _assemply_response_uplink_dicts(uplink_messages_response)
     uplink_dicts = _assembly_uplink_dicts(response_uplink_dicts)
@@ -118,11 +115,15 @@ def main():
         for sample in samples:
             repo.create_register(sample)
 
+
+repo = SqlAlchemyRepository()
+repo.init()
+
+schedule.every().day.at('00:00').do(job)
+schedule.every().day.at('12:00').do(job)
+schedule.every().minute.at(':00').do(job)
+
 if __name__ == '__main__':
-    
-    schedule.every().day.at('00:00').do(main)
-    schedule.every().day.at('12:00').do(main)
-    schedule.every().minute.at(':00').do(main)
     
     while True:
         schedule.run_pending()
